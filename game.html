@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Mido | Game</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css">
+</head>
+
+<body>
+
+    <div class="game-page">
+
+
+        <header class="top-bar">
+
+            <button
+                type="button"
+                id="menuButton"
+                class="top-button">
+                MENU
+            </button>
+
+
+            <div class="top-title">
+                MIDO
+            </div>
+
+
+            <a
+                href="index.html"
+                class="top-button">
+                HOME
+            </a>
+
+        </header>
+
+
+        <main class="game-container">
+
+
+            <div
+                id="turnDisplay"
+                class="turn-display">
+                PLAYER 1 TURN
+            </div>
+
+
+            <section
+                id="player1Section"
+                class="player-section active">
+
+
+                <div class="player-header">
+
+                    <div class="player-name">
+                        PLAYER 1
+                    </div>
+
+                    <div class="player-total">
+                        STONES:
+                        <span id="player1Total">
+                            48
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="board1"
+                    class="mido-board">
+                </div>
+
+            </section>
+
+
+            <div class="vs-display">
+                VS
+            </div>
+
+
+            <section
+                id="player2Section"
+                class="player-section inactive">
+
+
+                <div class="player-header">
+
+                    <div
+                        id="computerLabel"
+                        class="player-name">
+                        PLAYER 2
+                    </div>
+
+                    <div class="player-total">
+                        STONES:
+                        <span id="player2Total">
+                            48
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="board2"
+                    class="mido-board">
+                </div>
+
+            </section>
+
+
+            <div
+                id="gameMessage"
+                class="game-message">
+                Choose a hole to begin.
+            </div>
+
+
+        </main>
+
+
+        <div
+            id="menuOverlay"
+            class="menu-overlay">
+        </div>
+
+
+        <aside
+            id="sideMenu"
+            class="side-menu">
+
+
+            <div class="side-menu-header">
+
+                <div class="side-menu-title">
+                    MIDO
+                </div>
+
+                <button
+                    type="button"
+                    id="closeMenu"
+                    class="close-menu">
+                    X
+                </button>
+
+            </div>
+
+
+            <nav class="menu-navigation">
+
+                <a
+                    href="index.html"
+                    class="menu-link">
+                    HOME
+                </a>
+
+
+                <a
+                    href="game-mode.html"
+                    class="menu-link">
+                    NEW GAME
+                </a>
+
+
+                <button
+                    type="button"
+                    id="menuRestartButton"
+                    class="menu-link menu-button">
+                    RESTART GAME
+                </button>
+
+
+                <a
+                    href="settings.html"
+                    class="menu-link">
+                    SETTINGS
+                </a>
+
+
+                <a
+                    href="index.html#how-to-play"
+                    class="menu-link">
+                    HOW TO PLAY
+                </a>
+
+
+                <a
+                    href="index.html#about"
+                    class="menu-link">
+                    ABOUT MIDO
+                </a>
+
+            </nav>
+
+
+            <div class="side-menu-footer">
+
+                <div>
+                    48 STONES
+                </div>
+
+                <div>
+                    ONE WINNER
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <div
+            id="winnerOverlay"
+            class="winner-overlay">
+
+
+            <div class="winner-content">
+
+                <div class="winner-title">
+                    VICTORY
+                </div>
+
+
+                <div
+                    id="winnerName"
+                    class="winner-name">
+                    PLAYER 1 WINS!
+                </div>
+
+
+                <div
+                    id="winnerMessage"
+                    class="winner-message">
+                    All 48 stones have been collected!
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <script src="game.js"></script>
+    <script src="menu.js"></script>
+
+</body>
+
+</html>

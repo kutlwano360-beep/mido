@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Mido | Settings</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css">
+</head>
+
+<body>
+
+    <div class="settings-page">
+
+
+        <header class="top-bar">
+
+            <a
+                href="index.html"
+                class="top-button">
+                HOME
+            </a>
+
+            <div class="top-title">
+                MIDO
+            </div>
+
+            <a
+                href="game.html"
+                class="top-button">
+                GAME
+            </a>
+
+        </header>
+
+
+        <main class="settings-container">
+
+            <div class="section-label">
+                CUSTOMIZE YOUR GAME
+            </div>
+
+            <h1>
+                SETTINGS
+            </h1>
+
+            <p class="settings-intro">
+                Change how Mido looks and sounds.
+            </p>
+
+
+            <div class="settings-card">
+
+
+                <div class="setting-row">
+
+                    <div class="setting-information">
+
+                        <div class="setting-title">
+                            SOUND EFFECTS
+                        </div>
+
+                        <div class="setting-description">
+                            Play sounds when stones are moved
+                            and when a player wins.
+                        </div>
+
+                    </div>
+
+
+                    <label class="toggle">
+
+                        <input
+                            type="checkbox"
+                            id="soundToggle">
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+                </div>
+
+
+                <div class="setting-row">
+
+                    <div class="setting-information">
+
+                        <div class="setting-title">
+                            ANIMATIONS
+                        </div>
+
+                        <div class="setting-description">
+                            Enable board and victory animations.
+                        </div>
+
+                    </div>
+
+
+                    <label class="toggle">
+
+                        <input
+                            type="checkbox"
+                            id="animationsToggle">
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+                </div>
+
+
+                <div class="setting-row">
+
+                    <div class="setting-information">
+
+                        <div class="setting-title">
+                            DARK MODE
+                        </div>
+
+                        <div class="setting-description">
+                            Use the dark Mido appearance.
+                        </div>
+
+                    </div>
+
+
+                    <label class="toggle">
+
+                        <input
+                            type="checkbox"
+                            id="darkModeToggle">
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+                </div>
+
+
+                <div class="setting-row">
+
+                    <div class="setting-information">
+
+                        <div class="setting-title">
+                            LARGE STONE NUMBERS
+                        </div>
+
+                        <div class="setting-description">
+                            Make the number of stones
+                            easier to see.
+                        </div>
+
+                    </div>
+
+
+                    <label class="toggle">
+
+                        <input
+                            type="checkbox"
+                            id="largeNumbersToggle">
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="resetSettings"
+                    class="reset-settings">
+                    RESET SETTINGS
+                </button>
+
+
+                <div
+                    id="settingsMessage"
+                    class="settings-message">
+                </div>
+
+            </div>
+
+
+            <a
+                href="game.html"
+                class="back-game-button">
+                BACK TO GAME
+            </a>
+
+
+        </main>
+
+
+        <footer class="mido-footer">
+
+            <div class="footer-logo">
+                MIDO
+            </div>
+
+            <p>
+                An Indigenous African Strategy Game
+            </p>
+
+            <div class="footer-links">
+
+                <a href="index.html">
+                    Home
+                </a>
+
+                <a href="game-mode.html">
+                    Play
+                </a>
+
+                <a href="settings.html">
+                    Settings
+                </a>
+
+            </div>
+
+            <p class="footer-copy">
+                Mido Game
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <script>
+
+        const DEFAULT_SETTINGS = {
+            sound: true,
+            animations: true,
+            darkMode: true,
+            largeNumbers: true
+        };
+
+
+        let settings =
+            JSON.parse(
+                localStorage.getItem(
+                    "midoSettings"
+                )
+            );
+
+
+        if (!settings) {
+
+            settings = {
+                ...DEFAULT_SETTINGS
+            };
+
+        }
+
+
+        const soundToggle =
+            document.getElementById(
+                "soundToggle"
+            );
+
+        const animationsToggle =
+            document.getElementById(
+                "animationsToggle"
+            );
+
+        const darkModeToggle =
+            document.getElementById(
+                "darkModeToggle"
+            );
+
+        const largeNumbersToggle =
+            document.getElementById(
+                "largeNumbersToggle"
+            );
+
+        const resetSettings =
+            document.getElementById(
+                "resetSettings"
+            );
+
+        const settingsMessage =
+            document.getElementById(
+                "settingsMessage"
+            );
+
+
+        function saveSettings() {
+
+            localStorage.setItem(
+                "midoSettings",
+                JSON.stringify(settings)
+            );
+
+            applySettings();
+
+            settingsMessage.textContent =
+                "Settings saved.";
+
+            setTimeout(
+                function () {
+
+                    settingsMessage.textContent =
+                        "";
+
+                },
+                1500
+            );
+
+        }
+
+
+        function applySettings() {
+
+            soundToggle.checked =
+                settings.sound;
+
+            animationsToggle.checked =
+                settings.animations;
+
+            darkModeToggle.checked =
+                settings.darkMode;
+
+            largeNumbersToggle.checked =
+                settings.largeNumbers;
+
+
+            document.body.classList.toggle(
+                "light-mode",
+                !settings.darkMode
+            );
+
+        }
+
+
+        soundToggle.addEventListener(
+            "change",
+            function () {
+
+                settings.sound =
+                    soundToggle.checked;
+
+                saveSettings();
+
+            }
+        );
+
+
+        animationsToggle.addEventListener(
+            "change",
+            function () {
+
+                settings.animations =
+                    animationsToggle.checked;
+
+                saveSettings();
+
+            }
+        );
+
+
+        darkModeToggle.addEventListener(
+            "change",
+            function () {
+
+                settings.darkMode =
+                    darkModeToggle.checked;
+
+                saveSettings();
+
+            }
+        );
+
+
+        largeNumbersToggle.addEventListener(
+            "change",
+            function () {
+
+                settings.largeNumbers =
+                    largeNumbersToggle.checked;
+
+                saveSettings();
+
+            }
+        );
+
+
+        resetSettings.addEventListener(
+            "click",
+            function () {
+
+                settings = {
+                    ...DEFAULT_SETTINGS
+                };
+
+                localStorage.setItem(
+                    "midoSettings",
+                    JSON.stringify(settings)
+                );
+
+                applySettings();
+
+                settingsMessage.textContent =
+                    "Settings restored.";
+
+                setTimeout(
+                    function () {
+
+                        settingsMessage.textContent =
+                            "";
+
+                    },
+                    1500
+                );
+
+            }
+        );
+
+
+        applySettings();
+
+    </script>
+
+</body>
+
+</html>

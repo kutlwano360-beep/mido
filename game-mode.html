@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Mido | Game Mode</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css">
+</head>
+
+<body>
+
+    <div class="game-mode-page">
+
+        <header class="top-bar">
+
+            <a
+                href="index.html"
+                class="top-button">
+                BACK
+            </a>
+
+            <div class="top-title">
+                MIDO
+            </div>
+
+            <a
+                href="settings.html"
+                class="top-button">
+                SETTINGS
+            </a>
+
+        </header>
+
+
+        <main class="mode-container">
+
+            <div class="mode-label">
+                START A NEW GAME
+            </div>
+
+            <h1>
+                CHOOSE YOUR OPPONENT
+            </h1>
+
+            <p class="mode-description">
+                How do you want to play Mido?
+            </p>
+
+
+            <div class="mode-options">
+
+                <button
+                    type="button"
+                    class="mode-card"
+                    id="humanHumanButton">
+
+                    <div class="mode-icon">
+                        2
+                    </div>
+
+                    <div class="mode-card-title">
+                        PLAYER VS PLAYER
+                    </div>
+
+                    <div class="mode-card-text">
+                        Challenge another player
+                        on the same device.
+                    </div>
+
+                    <div class="mode-card-arrow">
+                        &gt;
+                    </div>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="mode-card"
+                    id="humanComputerButton">
+
+                    <div class="mode-icon">
+                        AI
+                    </div>
+
+                    <div class="mode-card-title">
+                        PLAYER VS COMPUTER
+                    </div>
+
+                    <div class="mode-card-text">
+                        Test your strategy
+                        against the computer.
+                    </div>
+
+                    <div class="mode-card-arrow">
+                        &gt;
+                    </div>
+
+                </button>
+
+            </div>
+
+
+            <div class="mode-rule">
+
+                <span>
+                    MIDO
+                </span>
+
+                <span>
+                    48 STONES TO VICTORY
+                </span>
+
+            </div>
+
+        </main>
+
+
+        <footer class="mido-footer">
+
+            <div class="footer-logo">
+                MIDO
+            </div>
+
+            <p>
+                An Indigenous African Strategy Game
+            </p>
+
+            <div class="footer-links">
+
+                <a href="index.html">
+                    Home
+                </a>
+
+                <a href="game-mode.html">
+                    Play
+                </a>
+
+                <a href="settings.html">
+                    Settings
+                </a>
+
+            </div>
+
+            <p class="footer-copy">
+                Mido Game
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <script>
+
+        const humanHumanButton =
+            document.getElementById(
+                "humanHumanButton"
+            );
+
+        const humanComputerButton =
+            document.getElementById(
+                "humanComputerButton"
+            );
+
+
+        humanHumanButton.addEventListener(
+            "click",
+            function () {
+
+                localStorage.setItem(
+                    "midoGameMode",
+                    "human-human"
+                );
+
+                window.location.href =
+                    "game.html";
+
+            }
+        );
+
+
+        humanComputerButton.addEventListener(
+            "click",
+            function () {
+
+                localStorage.setItem(
+                    "midoGameMode",
+                    "human-computer"
+                );
+
+                window.location.href =
+                    "game.html";
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
