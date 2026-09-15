@@ -2,985 +2,1087 @@ const HOLES = 16;
 const STARTING_STONES = 3;
 const WINNING_STONES = 48;
 
-
-/* =========================
-   SETTINGS
-========================= */
-
 const DEFAULT_SETTINGS = {
-    sound: true,
-    animations: true,
-    darkMode: true,
-    largeNumbers: true
+sound: true,
+animations: true,
+darkMode: true,
+largeNumbers: true
 };
 
-
-let gameSettings =
-    JSON.parse(
-        localStorage.getItem(
-            "midoSettings"
-        )
-    );
-
-
-if (!gameSettings) {
-
-    gameSettings = {
-        ...DEFAULT_SETTINGS
-    };
-
-}
-
-
-/* =========================
-   GAME MODE
-========================= */
+let gameSettings = loadSettings();
 
 const gameMode =
-    localStorage.getItem(
-        "midoGameMode"
-    ) || "human-human";
+localStorage.getItem("midoGameMode") ||
+"human-human";
 
+const difficulty =
+localStorage.getItem("midoDifficulty") ||
+"medium";
 
 /* =========================
-   GAME STATE
+GAME STATE
 ========================= */
 
-let player1 =
-    Array(HOLES).fill(
-        STARTING_STONES
-    );
-
-let player2 =
-    Array(HOLES).fill(
-        STARTING_STONES
-    );
+let player1 = Array(HOLES).fill(STARTING_STONES);
+let player2 = Array(HOLES).fill(STARTING_STONES);
 
 let currentPlayer = 1;
-
 let gameOver = false;
+let androidThinking = false;
+let gamePaused = false;
 
-let computerThinking = false;
-
+let gameStartTime = Date.now();
+let timerInterval = null;
+let finalGameTime = 0;
 
 /* =========================
-   DOM
+DOM
 ========================= */
 
 const board1 =
-    document.getElementById(
-        "board1"
-    );
+document.getElementById("player1Board");
 
 const board2 =
-    document.getElementById(
-        "board2"
-    );
+document.getElementById("player2Board");
 
 const player1Section =
-    document.getElementById(
-        "player1Section"
-    );
+document.getElementById("player1Section");
 
 const player2Section =
-    document.getElementById(
-        "player2Section"
-    );
+document.getElementById("player2Section");
 
 const player1Total =
-    document.getElementById(
-        "player1Total"
-    );
+document.getElementById("player1Total");
 
 const player2Total =
-    document.getElementById(
-        "player2Total"
-    );
+document.getElementById("player2Total");
+
+const player2Name =
+document.getElementById("player2Name");
 
 const turnDisplay =
-    document.getElementById(
-        "turnDisplay"
-    );
+document.getElementById("turnDisplay");
 
 const gameMessage =
-    document.getElementById(
-        "gameMessage"
-    );
+document.getElementById("gameMessage");
 
-const computerLabel =
-    document.getElementById(
-        "computerLabel"
-    );
+const gameTimer =
+document.getElementById("gameTimer");
+
+const pauseButton =
+document.getElementById("pauseButton");
+
+const pauseOverlay =
+document.getElementById("pauseOverlay");
+
+const continueButton =
+document.getElementById("continueButton");
+
+const pauseRestartButton =
+document.getElementById("pauseRestartButton");
 
 const winnerOverlay =
-    document.getElementById(
-        "winnerOverlay"
-    );
+document.getElementById("winnerOverlay");
+
+const winnerTitle =
+document.getElementById("winnerTitle");
 
 const winnerName =
-    document.getElementById(
-        "winnerName"
-    );
+document.getElementById("winnerName");
 
 const winnerMessage =
-    document.getElementById(
-        "winnerMessage"
-    );
+document.getElementById("winnerMessage");
 
+const winnerTime =
+document.getElementById("winnerTime");
+
+const winnerHighScore =
+document.getElementById("winnerHighScore");
+
+const winnerPlayAgainButton =
+document.getElementById("winnerPlayAgainButton");
+
+const winnerHighScoresButton =
+document.getElementById("winnerHighScoresButton");
+
+const highScoresOverlay =
+document.getElementById("highScoresOverlay");
+
+const highScoresContent =
+document.getElementById("highScoresContent");
+
+const closeHighScoresButton =
+document.getElementById("closeHighScoresButton");
+
+const menuHighScoresButton =
+document.getElementById("menuHighScoresButton");
 
 /* =========================
-   GAME MODE LABEL
+SETTINGS
 ========================= */
 
-if (
-    gameMode ===
-    "human-computer"
-) {
+function loadSettings() {
 
-    if (computerLabel) {
+try {
 
-        computerLabel.textContent =
-            "COMPUTER";
+    const saved =
+        localStorage.getItem("midoSettings");
+
+    if (saved) {
+
+        return {
+            ...DEFAULT_SETTINGS,
+            ...JSON.parse(saved)
+        };
 
     }
 
+} catch (error) {
+
+    console.log(
+        "Settings could not be loaded."
+    );
+
 }
 
+return {
+    ...DEFAULT_SETTINGS
+};
 
-/* =========================
-   SETTINGS
-========================= */
+}
 
 function applyGameSettings() {
 
-    document.body.classList.toggle(
-        "no-animations",
-        !gameSettings.animations
-    );
+document.body.classList.toggle(
+    "no-animations",
+    !gameSettings.animations
+);
 
+document.body.classList.toggle(
+    "light-mode",
+    !gameSettings.darkMode
+);
 
-    document.body.classList.toggle(
-        "light-mode",
-        !gameSettings.darkMode
-    );
-
-
-    document.body.classList.toggle(
-        "small-stone-numbers",
-        !gameSettings.largeNumbers
-    );
+document.body.classList.toggle(
+    "small-stone-numbers",
+    !gameSettings.largeNumbers
+);
 
 }
-
-
-function loadSettingsAgain() {
-
-    const storedSettings =
-        localStorage.getItem(
-            "midoSettings"
-        );
-
-
-    if (storedSettings) {
-
-        try {
-
-            gameSettings =
-                JSON.parse(
-                    storedSettings
-                );
-
-        } catch (error) {
-
-            gameSettings = {
-                ...DEFAULT_SETTINGS
-            };
-
-        }
-
-    }
-
-}
-
 
 /* =========================
-   SOUND
+SOUND
 ========================= */
 
 function playMoveSound() {
 
-    if (!gameSettings.sound) {
+if (!gameSettings.sound) {
+    return;
+}
+
+try {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
         return;
     }
 
+    const context =
+        new AudioContext();
 
-    try {
+    const oscillator =
+        context.createOscillator();
 
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
+    const gain =
+        context.createGain();
 
+    oscillator.type = "sine";
+    oscillator.frequency.value = 280;
 
-        if (!AudioContext) {
-            return;
-        }
+    gain.gain.setValueAtTime(
+        0.0001,
+        context.currentTime
+    );
 
+    gain.gain.exponentialRampToValueAtTime(
+        0.07,
+        context.currentTime + 0.01
+    );
 
-        const audioContext =
-            new AudioContext();
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        context.currentTime + 0.12
+    );
 
+    oscillator.connect(gain);
+    gain.connect(context.destination);
 
-        const oscillator =
-            audioContext.createOscillator();
+    oscillator.start();
 
-        const gain =
-            audioContext.createGain();
+    oscillator.stop(
+        context.currentTime + 0.12
+    );
 
+} catch (error) {
 
-        oscillator.type =
-            "sine";
-
-        oscillator.frequency.value =
-            280;
-
-
-        gain.gain.setValueAtTime(
-            0.0001,
-            audioContext.currentTime
-        );
-
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.07,
-            audioContext.currentTime + 0.01
-        );
-
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.0001,
-            audioContext.currentTime + 0.12
-        );
-
-
-        oscillator.connect(gain);
-
-        gain.connect(
-            audioContext.destination
-        );
-
-
-        oscillator.start();
-
-        oscillator.stop(
-            audioContext.currentTime + 0.12
-        );
-
-    } catch (error) {
-
-        console.log(
-            "Sound unavailable."
-        );
-
-    }
+    console.log(
+        "Move sound unavailable."
+    );
 
 }
 
+}
 
 function playWinSound() {
 
-    if (!gameSettings.sound) {
+if (!gameSettings.sound) {
+    return;
+}
+
+try {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
         return;
     }
 
+    const context =
+        new AudioContext();
 
-    try {
+    const notes = [
+        392,
+        523,
+        659,
+        784
+    ];
 
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
+    notes.forEach(
+        function (frequency, index) {
 
+            const oscillator =
+                context.createOscillator();
 
-        if (!AudioContext) {
-            return;
+            const gain =
+                context.createGain();
+
+            oscillator.type = "sine";
+
+            oscillator.frequency.value =
+                frequency;
+
+            const startTime =
+                context.currentTime +
+                index * 0.14;
+
+            gain.gain.setValueAtTime(
+                0.0001,
+                startTime
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.12,
+                startTime + 0.02
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                startTime + 0.22
+            );
+
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+
+            oscillator.start(startTime);
+
+            oscillator.stop(
+                startTime + 0.23
+            );
+
         }
+    );
 
+} catch (error) {
 
-        const audioContext =
-            new AudioContext();
-
-
-        const notes = [
-            392,
-            523,
-            659,
-            784
-        ];
-
-
-        notes.forEach(
-            function (frequency, index) {
-
-                const oscillator =
-                    audioContext.createOscillator();
-
-                const gain =
-                    audioContext.createGain();
-
-
-                oscillator.type =
-                    "sine";
-
-                oscillator.frequency.value =
-                    frequency;
-
-
-                const startTime =
-                    audioContext.currentTime +
-                    index * 0.14;
-
-
-                gain.gain.setValueAtTime(
-                    0.0001,
-                    startTime
-                );
-
-
-                gain.gain.exponentialRampToValueAtTime(
-                    0.12,
-                    startTime + 0.02
-                );
-
-
-                gain.gain.exponentialRampToValueAtTime(
-                    0.0001,
-                    startTime + 0.22
-                );
-
-
-                oscillator.connect(gain);
-
-                gain.connect(
-                    audioContext.destination
-                );
-
-
-                oscillator.start(
-                    startTime
-                );
-
-                oscillator.stop(
-                    startTime + 0.23
-                );
-
-            }
-        );
-
-    } catch (error) {
-
-        console.log(
-            "Win sound unavailable."
-        );
-
-    }
+    console.log(
+        "Win sound unavailable."
+    );
 
 }
 
+}
 
 /* =========================
-   BOARD COLORS
+HOLE COLORS
 ========================= */
 
 function getHoleColor(stones) {
 
-    if (stones === 0) {
+if (stones === 0) {
+    return "#ffffff";
+}
 
-        return "#ffffff";
+const hue =
+    (stones * 45) % 360;
 
-    }
-
-
-    const hue =
-        (stones * 45) % 360;
-
-
-    return (
-        "hsl(" +
-        hue +
-        ", 80%, 60%)"
-    );
+return (
+    "hsl(" +
+    hue +
+    ", 80%, 60%)"
+);
 
 }
 
-
 /* =========================
-   BOARD CREATION
+CREATE BOARD
 ========================= */
 
 function createBoard(
-    boardElement,
-    playerNumber
+boardElement,
+playerNumber
 ) {
 
-    boardElement.innerHTML = "";
+if (!boardElement) {
 
-
-    /*
-        Visual arrangement:
-
-        1   2   3   4   5   6   7   8
-
-        16  15  14  13  12  11  10  9
-    */
-
-
-    const visualOrder = [
-        0, 1, 2, 3,
-        4, 5, 6, 7,
-
-        15, 14, 13, 12,
-        11, 10, 9, 8
-    ];
-
-
-    visualOrder.forEach(
-        function (index) {
-
-            const hole =
-                document.createElement(
-                    "button"
-                );
-
-
-            hole.type =
-                "button";
-
-
-            hole.className =
-                "hole";
-
-
-            hole.dataset.index =
-                index;
-
-
-            hole.dataset.player =
-                playerNumber;
-
-
-            const stoneCount =
-                document.createElement(
-                    "span"
-                );
-
-
-            stoneCount.className =
-                "stone-count";
-
-
-            hole.appendChild(
-                stoneCount
-            );
-
-
-            hole.addEventListener(
-                "click",
-                function () {
-
-                    handleHoleClick(
-                        playerNumber,
-                        index
-                    );
-
-                }
-            );
-
-
-            boardElement.appendChild(
-                hole
-            );
-
-        }
+    console.error(
+        "Mido board element not found."
     );
+
+    return;
+}
+
+boardElement.innerHTML = "";
+
+const visualOrder = [
+    0, 1, 2, 3,
+    4, 5, 6, 7,
+    15, 14, 13, 12,
+    11, 10, 9, 8
+];
+
+visualOrder.forEach(
+    function (index) {
+
+        const hole =
+            document.createElement("button");
+
+        hole.type = "button";
+        hole.className = "hole";
+
+        hole.dataset.index =
+            index;
+
+        hole.dataset.player =
+            playerNumber;
+
+        const stoneCount =
+            document.createElement("span");
+
+        stoneCount.className =
+            "stone-count";
+
+        stoneCount.textContent =
+            STARTING_STONES;
+
+        hole.appendChild(
+            stoneCount
+        );
+
+        hole.addEventListener(
+            "click",
+            function () {
+
+                handleHoleClick(
+                    playerNumber,
+                    index
+                );
+
+            }
+        );
+
+        boardElement.appendChild(
+            hole
+        );
+
+    }
+);
 
 }
 
-
 /* =========================
-   BOARD RENDERING
+RENDER BOARD
 ========================= */
 
 function renderBoard(
-    boardElement,
-    stones
+boardElement,
+stones,
+playerNumber
 ) {
 
-    const holes =
-        boardElement.querySelectorAll(
-            ".hole"
-        );
+if (!boardElement) {
+    return;
+}
 
+const holes =
+    boardElement.querySelectorAll(
+        ".hole"
+    );
 
-    holes.forEach(
-        function (hole) {
+holes.forEach(
+    function (hole) {
 
-            const index =
-                Number(
-                    hole.dataset.index
-                );
+        const index =
+            Number(
+                hole.dataset.index
+            );
 
+        const count =
+            stones[index];
 
-            const count =
-                stones[index];
+        const countElement =
+            hole.querySelector(
+                ".stone-count"
+            );
 
-
-            const countElement =
-                hole.querySelector(
-                    ".stone-count"
-                );
-
+        if (countElement) {
 
             countElement.textContent =
                 count;
 
+        }
 
-            hole.style.background =
-                getHoleColor(
-                    count
-                );
+        hole.style.background =
+            getHoleColor(count);
 
+        hole.classList.toggle(
+            "empty",
+            count === 0
+        );
 
-            hole.classList.toggle(
-                "empty",
-                count === 0
+        const isCurrentBoard =
+            playerNumber === currentPlayer;
+
+        const isAndroidBoard =
+            gameMode === "human-android" &&
+            playerNumber === 2;
+
+        hole.disabled =
+            gameOver ||
+            gamePaused ||
+            androidThinking ||
+            !isCurrentBoard ||
+            (
+                isAndroidBoard &&
+                currentPlayer === 2
             );
 
-
-            hole.disabled =
-                gameOver ||
-                computerThinking;
-
-
-        }
-    );
+    }
+);
 
 }
 
+/* =========================
+TOTALS
+========================= */
+
+function getTotalStones(stones) {
+
+return stones.reduce(
+    function (total, value) {
+
+        return total + value;
+
+    },
+    0
+);
+
+}
 
 /* =========================
-   BOARD ACTIVE STATE
+ACTIVE BOARD
 ========================= */
 
 function updateActiveBoard() {
 
-    if (!player1Section ||
-        !player2Section) {
-
-        return;
-
-    }
-
-
-    if (currentPlayer === 1) {
-
-        player1Section.classList.add(
-            "active"
-        );
-
-        player1Section.classList.remove(
-            "inactive"
-        );
-
-
-        player2Section.classList.add(
-            "inactive"
-        );
-
-        player2Section.classList.remove(
-            "active"
-        );
-
-    } else {
-
-        player2Section.classList.add(
-            "active"
-        );
-
-        player2Section.classList.remove(
-            "inactive"
-        );
-
-
-        player1Section.classList.add(
-            "inactive"
-        );
-
-        player1Section.classList.remove(
-            "active"
-        );
-
-    }
-
+if (
+    !player1Section ||
+    !player2Section
+) {
+    return;
 }
 
+if (currentPlayer === 1) {
 
-/* =========================
-   TOTAL STONES
-========================= */
+    player1Section.classList.add(
+        "active"
+    );
 
-function getTotalStones(
-    stones
-) {
+    player1Section.classList.remove(
+        "inactive"
+    );
 
-    return stones.reduce(
-        function (
-            total,
-            value
-        ) {
+    player2Section.classList.add(
+        "inactive"
+    );
 
-            return total + value;
+    player2Section.classList.remove(
+        "active"
+    );
 
-        },
-        0
+} else {
+
+    player2Section.classList.add(
+        "active"
+    );
+
+    player2Section.classList.remove(
+        "inactive"
+    );
+
+    player1Section.classList.add(
+        "inactive"
+    );
+
+    player1Section.classList.remove(
+        "active"
     );
 
 }
 
+}
 
 /* =========================
-   TURN DISPLAY
+TURN DISPLAY
 ========================= */
 
 function updateTurnDisplay() {
 
-    if (!turnDisplay) {
-        return;
-    }
+if (!turnDisplay) {
+    return;
+}
 
+if (gameOver) {
+    return;
+}
 
-    if (currentPlayer === 1) {
+if (gamePaused) {
+
+    turnDisplay.textContent =
+        "GAME PAUSED";
+
+    return;
+}
+
+if (currentPlayer === 1) {
+
+    turnDisplay.textContent =
+        "PLAYER 1 TURN";
+
+    return;
+}
+
+if (
+    gameMode === "human-android"
+) {
+
+    if (androidThinking) {
 
         turnDisplay.textContent =
-            "PLAYER 1 TURN";
+            "ANDROID THINKING...";
 
     } else {
 
-        if (
-            gameMode ===
-            "human-computer"
-        ) {
-
-            if (computerThinking) {
-
-                turnDisplay.textContent =
-                    "COMPUTER THINKING...";
-
-            } else {
-
-                turnDisplay.textContent =
-                    "COMPUTER TURN";
-
-            }
-
-        } else {
-
-            turnDisplay.textContent =
-                "PLAYER 2 TURN";
-
-        }
+        turnDisplay.textContent =
+            "ANDROID TURN";
 
     }
 
+    return;
 }
 
+turnDisplay.textContent =
+    "PLAYER 2 TURN";
+
+}
 
 /* =========================
-   MESSAGE
+MESSAGE
 ========================= */
 
 function updateMessage() {
 
-    if (!gameMessage) {
-        return;
-    }
+if (
+    !gameMessage ||
+    gameOver
+) {
+    return;
+}
 
+if (gamePaused) {
 
-    if (gameOver) {
-        return;
-    }
+    gameMessage.textContent =
+        "The game is paused.";
 
+    return;
+}
 
-    if (currentPlayer === 1) {
+if (currentPlayer === 1) {
+
+    gameMessage.textContent =
+        "Choose a hole on your side.";
+
+    return;
+}
+
+if (
+    gameMode === "human-android"
+) {
+
+    if (androidThinking) {
 
         gameMessage.textContent =
-            "Choose a hole to begin.";
+            "ANDROID is thinking...";
 
     } else {
 
-        if (
-            gameMode ===
-            "human-computer"
-        ) {
-
-            if (computerThinking) {
-
-                gameMessage.textContent =
-                    "The computer is choosing a move...";
-
-            } else {
-
-                gameMessage.textContent =
-                    "Computer's turn.";
-
-            }
-
-        } else {
-
-            gameMessage.textContent =
-                "Player 2, choose a hole.";
-
-        }
+        gameMessage.textContent =
+            "ANDROID'S TURN";
 
     }
 
+    return;
 }
 
+gameMessage.textContent =
+    "PLAYER 2, choose a hole.";
+
+}
 
 /* =========================
-   RENDER EVERYTHING
+RENDER
 ========================= */
 
 function render() {
 
-    loadSettingsAgain();
+gameSettings =
+    loadSettings();
 
-    applyGameSettings();
+applyGameSettings();
 
+renderBoard(
+    board1,
+    player1,
+    1
+);
 
-    renderBoard(
-        board1,
-        player1
-    );
+renderBoard(
+    board2,
+    player2,
+    2
+);
 
-
-    renderBoard(
-        board2,
-        player2
-    );
-
+if (player1Total) {
 
     player1Total.textContent =
-        getTotalStones(
-            player1
-        );
-
-
-    player2Total.textContent =
-        getTotalStones(
-            player2
-        );
-
-
-    updateActiveBoard();
-
-    updateTurnDisplay();
-
-    updateMessage();
-
-
-    if (
-        gameMode ===
-        "human-computer" &&
-        currentPlayer === 2 &&
-        !gameOver &&
-        !computerThinking
-    ) {
-
-        setTimeout(
-            computerMove,
-            650
-        );
-
-    }
+        getTotalStones(player1);
 
 }
 
+if (player2Total) {
+
+    player2Total.textContent =
+        getTotalStones(player2);
+
+}
+
+if (player2Name) {
+
+    player2Name.textContent =
+        gameMode === "human-android"
+            ? "ANDROID"
+            : "PLAYER 2";
+
+}
+
+updateActiveBoard();
+updateTurnDisplay();
+updateMessage();
+
+}
 
 /* =========================
-   HANDLE CLICK
+HOLE CLICK
 ========================= */
 
 function handleHoleClick(
-    playerNumber,
-    holeIndex
+playerNumber,
+holeIndex
 ) {
 
-    if (gameOver) {
-        return;
+if (
+    gameOver ||
+    gamePaused ||
+    androidThinking
+) {
+    return;
+}
+
+if (
+    playerNumber !==
+    currentPlayer
+) {
+    return;
+}
+
+if (
+    gameMode === "human-android" &&
+    currentPlayer === 2
+) {
+    return;
+}
+
+const board =
+    playerNumber === 1
+        ? player1
+        : player2;
+
+if (
+    board[holeIndex] <= 0
+) {
+
+    if (gameMessage) {
+
+        gameMessage.textContent =
+            "That hole is empty.";
+
     }
 
+    return;
+}
 
-    if (computerThinking) {
-        return;
-    }
+makeMove(
+    playerNumber,
+    holeIndex
+);
 
+}
 
-    if (
-        playerNumber !==
-        currentPlayer
-    ) {
+/* =========================
+MAKE MOVE
+========================= */
 
-        return;
-    }
+function makeMove(
+playerNumber,
+holeIndex
+) {
 
+if (
+    gameOver ||
+    gamePaused
+) {
+    return;
+}
 
-    if (
-        gameMode ===
-        "human-computer" &&
-        currentPlayer === 2
-    ) {
+const board =
+    playerNumber === 1
+        ? player1
+        : player2;
 
-        return;
-    }
+let stones =
+    board[holeIndex];
 
+if (stones <= 0) {
+    return;
+}
 
-    const board =
-        playerNumber === 1
-            ? player1
-            : player2;
+board[holeIndex] = 0;
 
+let currentIndex =
+    holeIndex;
 
-    const stones =
-        board[holeIndex];
+while (stones > 0) {
 
+    currentIndex =
+        (currentIndex + 1) %
+        HOLES;
 
-    if (stones <= 0) {
+    board[currentIndex] += 1;
 
-        if (gameMessage) {
+    stones -= 1;
+}
 
-            gameMessage.textContent =
-                "That hole is empty.";
+playMoveSound();
+
+if (
+    checkWin(
+        playerNumber,
+        board
+    )
+) {
+    return;
+}
+
+currentPlayer =
+    currentPlayer === 1
+        ? 2
+        : 1;
+
+render();
+
+if (
+    gameMode === "human-android" &&
+    currentPlayer === 2
+) {
+
+    startAndroidTurn();
+
+}
+
+}
+
+/* =========================
+WIN CHECK
+========================= */
+
+function checkWin(
+playerNumber,
+board
+) {
+
+const won =
+    board.some(
+        function (stones) {
+
+            return (
+                stones >=
+                WINNING_STONES
+            );
 
         }
+    );
 
-        return;
+if (!won) {
+    return false;
+}
 
-    }
+gameOver = true;
+androidThinking = false;
 
+stopTimer();
 
-    makeMove(
-        playerNumber,
-        holeIndex
+finalGameTime =
+    Math.floor(
+        (
+            Date.now() -
+            gameStartTime
+        ) / 1000
+    );
+
+const winner =
+    playerNumber === 1
+        ? "PLAYER 1"
+        : gameMode === "human-android"
+            ? "ANDROID"
+            : "PLAYER 2";
+
+if (winnerTitle) {
+
+    winnerTitle.textContent =
+        playerNumber === 1
+            ? "VICTORY"
+            : "DEFEAT";
+
+}
+
+if (winnerName) {
+
+    winnerName.textContent =
+        winner + " WON!";
+
+}
+
+if (winnerMessage) {
+
+    winnerMessage.textContent =
+        "All 48 stones are in one hole.";
+
+}
+
+if (winnerTime) {
+
+    winnerTime.textContent =
+        "TIME " +
+        formatTime(finalGameTime);
+
+}
+
+const isHighScore =
+    saveHighScore(
+        winner,
+        finalGameTime
+    );
+
+if (winnerHighScore) {
+
+    winnerHighScore.textContent =
+        isHighScore
+            ? "NEW HIGH SCORE!"
+            : "";
+
+}
+
+if (winnerOverlay) {
+
+    winnerOverlay.classList.add(
+        "show"
     );
 
 }
 
+playWinSound();
+
+render();
+
+return true;
+
+}
 
 /* =========================
-   MAKE MOVE
+ANDROID
 ========================= */
 
-function makeMove(
-    playerNumber,
-    holeIndex
+function startAndroidTurn() {
+
+if (
+    gameOver ||
+    gamePaused ||
+    gameMode !== "human-android" ||
+    currentPlayer !== 2
 ) {
+    return;
+}
 
-    const board =
-        playerNumber === 1
-            ? player1
-            : player2;
+if (androidThinking) {
+    return;
+}
 
+androidThinking = true;
 
-    let stones =
-        board[holeIndex];
+render();
 
+setTimeout(
+    function () {
 
-    if (stones <= 0) {
-        return;
-    }
+        if (
+            gameOver ||
+            gamePaused
+        ) {
 
+            androidThinking =
+                false;
 
-    board[holeIndex] = 0;
+            render();
 
+            return;
+        }
 
-    /*
-        Movement follows:
+        const move =
+            chooseAndroidMove();
 
-        1 -> 2 -> 3 -> ... -> 16 -> 1
-    */
+        if (move === null) {
 
+            androidThinking =
+                false;
 
-    let currentIndex =
-        holeIndex;
+            render();
 
-
-    while (stones > 0) {
-
-        currentIndex =
-            (currentIndex + 1) %
-            HOLES;
-
-
-        board[currentIndex] += 1;
-
-        stones -= 1;
-
-    }
-
-
-    playMoveSound();
-
-
-    render();
-
-
-    if (
-        checkWin(
-            playerNumber,
-            board
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    currentPlayer =
-        currentPlayer === 1
-            ? 2
-            : 1;
-
-
-    render();
-
-
-    if (
-        gameMode ===
-        "human-computer" &&
-        currentPlayer === 2
-    ) {
+            return;
+        }
 
         setTimeout(
-            computerMove,
-            650
+            function () {
+
+                if (
+                    gameOver ||
+                    gamePaused
+                ) {
+
+                    androidThinking =
+                        false;
+
+                    render();
+
+                    return;
+                }
+
+                androidThinking =
+                    false;
+
+                makeMove(
+                    2,
+                    move
+                );
+
+            },
+            450
         );
+
+    },
+    650
+);
+
+}
+
+/* =========================
+ANDROID MOVE CHOICE
+========================= */
+
+function chooseAndroidMove() {
+
+const legalMoves = [];
+
+for (
+    let i = 0;
+    i < HOLES;
+    i++
+) {
+
+    if (player2[i] > 0) {
+
+        legalMoves.push(i);
 
     }
 
 }
 
+if (
+    legalMoves.length === 0
+) {
+    return null;
+}
 
-/* =========================
-   WIN CHECK
-========================= */
-
-function checkWin(
-    playerNumber,
-    board
+for (
+    let i = 0;
+    i < legalMoves.length;
+    i++
 ) {
 
-    const hasWinningHole =
-        board.some(
+    const move =
+        legalMoves[i];
+
+    const simulated =
+        simulateMove(
+            player2,
+            move
+        );
+
+    if (
+        simulated.some(
             function (stones) {
 
                 return (
@@ -989,208 +1091,92 @@ function checkWin(
                 );
 
             }
-        );
+        )
+    ) {
 
-
-    if (!hasWinningHole) {
-
-        return false;
+        return move;
 
     }
+}
 
+if (difficulty === "easy") {
 
-    gameOver = true;
-
-    computerThinking = false;
-
-
-    const winnerText =
-        playerNumber === 1
-            ? "PLAYER 1 WINS!"
-            : (
-                gameMode ===
-                "human-computer"
-                    ? "COMPUTER WINS!"
-                    : "PLAYER 2 WINS!"
-            );
-
-
-    if (winnerName) {
-
-        winnerName.textContent =
-            winnerText;
-
-    }
-
-
-    if (winnerMessage) {
-
-        winnerMessage.textContent =
-            "All 48 stones are in one hole.";
-
-    }
-
-
-    if (winnerOverlay) {
-
-        winnerOverlay.classList.add(
-            "show"
-        );
-
-    }
-
-
-    playWinSound();
-
-
-    render();
-
-
-    setTimeout(
-        function () {
-
-            if (winnerOverlay) {
-
-                winnerOverlay.classList.remove(
-                    "show"
-                );
-
-            }
-
-        },
-        3000
+    return chooseEasyMove(
+        legalMoves
     );
+}
 
+if (difficulty === "hard") {
 
-    return true;
+    return chooseHardMove(
+        legalMoves
+    );
+}
+
+return chooseMediumMove(
+    legalMoves
+);
 
 }
 
-
 /* =========================
-   COMPUTER
+EASY
 ========================= */
 
-function computerMove() {
+function chooseEasyMove(
+legalMoves
+) {
 
-    if (gameOver) {
-        return;
-    }
+if (
+    Math.random() < 0.45
+) {
 
+    return legalMoves[
+        Math.floor(
+            Math.random() *
+            legalMoves.length
+        )
+    ];
+}
 
-    if (
-        gameMode !==
-        "human-computer"
-    ) {
-
-        return;
-
-    }
-
-
-    if (currentPlayer !== 2) {
-        return;
-    }
-
-
-    if (computerThinking) {
-        return;
-    }
-
-
-    computerThinking = true;
-
-    updateTurnDisplay();
-
-    updateMessage();
-
-
-    const move =
-        chooseComputerMove();
-
-
-    if (move === null) {
-
-        computerThinking = false;
-
-        return;
-
-    }
-
-
-    setTimeout(
-        function () {
-
-            computerThinking = false;
-
-
-            if (gameOver) {
-                return;
-            }
-
-
-            makeMove(
-                2,
-                move
-            );
-
-        },
-        500
-    );
+return chooseBestPileMove(
+    legalMoves,
+    2
+);
 
 }
 
-
 /* =========================
-   COMPUTER MOVE CHOICE
+MEDIUM
 ========================= */
 
-function chooseComputerMove() {
+function chooseMediumMove(
+legalMoves
+) {
 
-    const legalMoves = [];
+return chooseBestPileMove(
+    legalMoves,
+    4
+);
 
+}
 
-    for (
-        let i = 0;
-        i < HOLES;
-        i++
-    ) {
+/* =========================
+HARD
+========================= */
 
-        if (
-            player2[i] >
-            0
-        ) {
+function chooseHardMove(
+legalMoves
+) {
 
-            legalMoves.push(i);
+let bestMove =
+    legalMoves[0];
 
-        }
+let bestScore =
+    -Infinity;
 
-    }
-
-
-    if (
-        legalMoves.length === 0
-    ) {
-
-        return null;
-
-    }
-
-
-    /*
-        First look for an immediate
-        winning move.
-    */
-
-    for (
-        let i = 0;
-        i < legalMoves.length;
-        i++
-    ) {
-
-        const move =
-            legalMoves[i];
-
+legalMoves.forEach(
+    function (move) {
 
         const simulated =
             simulateMove(
@@ -1198,212 +1184,663 @@ function chooseComputerMove() {
                 move
             );
 
-
-        const wins =
-            simulated.some(
-                function (stones) {
-
-                    return (
-                        stones >=
-                        WINNING_STONES
-                    );
-
-                }
+        const score =
+            evaluateBoard(
+                simulated
             );
 
+        const largest =
+            Math.max(
+                ...simulated
+            );
 
-        if (wins) {
+        const finalScore =
+            score +
+            largest * 2;
 
-            return move;
+        if (
+            finalScore >
+            bestScore
+        ) {
+
+            bestScore =
+                finalScore;
+
+            bestMove =
+                move;
 
         }
 
     }
+);
 
-
-    /*
-        Otherwise score each move.
-    */
-
-    let bestMove =
-        legalMoves[0];
-
-    let bestScore =
-        -Infinity;
-
-
-    legalMoves.forEach(
-        function (move) {
-
-            const simulated =
-                simulateMove(
-                    player2,
-                    move
-                );
-
-
-            const largestPile =
-                Math.max(
-                    ...simulated
-                );
-
-
-            let concentratedPiles =
-                0;
-
-
-            simulated.forEach(
-                function (stones) {
-
-                    if (
-                        stones >= 6
-                    ) {
-
-                        concentratedPiles +=
-                            stones;
-
-                    }
-
-                }
-            );
-
-
-            const score =
-                largestPile * 4 +
-                concentratedPiles +
-                Math.random() * 8;
-
-
-            if (
-                score >
-                bestScore
-            ) {
-
-                bestScore =
-                    score;
-
-                bestMove =
-                    move;
-
-            }
-
-        }
-    );
-
-
-    return bestMove;
+return bestMove;
 
 }
 
+/* =========================
+BEST PILE MOVE
+========================= */
+
+function chooseBestPileMove(
+legalMoves,
+multiplier
+) {
+
+let bestMove =
+    legalMoves[0];
+
+let bestScore =
+    -Infinity;
+
+legalMoves.forEach(
+    function (move) {
+
+        const simulated =
+            simulateMove(
+                player2,
+                move
+            );
+
+        const largestPile =
+            Math.max(
+                ...simulated
+            );
+
+        let concentration =
+            0;
+
+        simulated.forEach(
+            function (stones) {
+
+                if (stones >= 6) {
+
+                    concentration +=
+                        stones;
+
+                }
+
+            }
+        );
+
+        const score =
+            largestPile * multiplier +
+            concentration +
+            Math.random() * 5;
+
+        if (
+            score >
+            bestScore
+        ) {
+
+            bestScore =
+                score;
+
+            bestMove =
+                move;
+
+        }
+
+    }
+);
+
+return bestMove;
+
+}
 
 /* =========================
-   SIMULATE MOVE
+EVALUATE BOARD
+========================= */
+
+function evaluateBoard(
+board
+) {
+
+const largest =
+    Math.max(
+        ...board
+    );
+
+const total =
+    getTotalStones(board);
+
+let concentration =
+    0;
+
+board.forEach(
+    function (stones) {
+
+        if (stones >= 6) {
+
+            concentration +=
+                stones;
+
+        }
+
+    }
+);
+
+return (
+    largest * 5 +
+    concentration * 2 +
+    total * 0.05
+);
+
+}
+
+/* =========================
+SIMULATE MOVE
 ========================= */
 
 function simulateMove(
-    board,
-    holeIndex
+board,
+holeIndex
 ) {
 
-    const simulated =
-        [...board];
+const simulated =
+    [...board];
 
+let stones =
+    simulated[holeIndex];
 
-    let stones =
-        simulated[holeIndex];
+simulated[holeIndex] = 0;
 
+let currentIndex =
+    holeIndex;
 
-    simulated[holeIndex] = 0;
+while (stones > 0) {
 
+    currentIndex =
+        (currentIndex + 1) %
+        HOLES;
 
-    let currentIndex =
-        holeIndex;
+    simulated[currentIndex] += 1;
 
+    stones -= 1;
+}
 
-    while (stones > 0) {
-
-        currentIndex =
-            (currentIndex + 1) %
-            HOLES;
-
-
-        simulated[currentIndex] += 1;
-
-        stones -= 1;
-
-    }
-
-
-    return simulated;
+return simulated;
 
 }
 
+/* =========================
+PAUSE
+========================= */
+
+function pauseGame() {
+
+if (gameOver) {
+    return;
+}
+
+if (gamePaused) {
+    return;
+}
+
+gamePaused = true;
+
+stopTimer();
+
+if (pauseOverlay) {
+
+    pauseOverlay.classList.add(
+        "show"
+    );
+
+}
+
+render();
+
+}
 
 /* =========================
-   RESTART
+CONTINUE
+========================= */
+
+function continueGame() {
+
+if (!gamePaused) {
+    return;
+}
+
+gamePaused = false;
+
+if (pauseOverlay) {
+
+    pauseOverlay.classList.remove(
+        "show"
+    );
+
+}
+
+startTimer();
+
+render();
+
+if (
+    gameMode === "human-android" &&
+    currentPlayer === 2
+) {
+
+    startAndroidTurn();
+
+}
+
+}
+
+/* =========================
+RESTART
 ========================= */
 
 function restartGame() {
 
-    player1 =
-        Array(HOLES).fill(
-            STARTING_STONES
-        );
+player1 =
+    Array(HOLES).fill(
+        STARTING_STONES
+    );
 
+player2 =
+    Array(HOLES).fill(
+        STARTING_STONES
+    );
 
-    player2 =
-        Array(HOLES).fill(
-            STARTING_STONES
-        );
+currentPlayer = 1;
+gameOver = false;
+androidThinking = false;
+gamePaused = false;
 
+finalGameTime = 0;
 
-    currentPlayer = 1;
+gameStartTime =
+    Date.now();
 
-    gameOver = false;
+if (winnerOverlay) {
 
-    computerThinking = false;
-
-
-    if (winnerOverlay) {
-
-        winnerOverlay.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    if (gameMessage) {
-
-        gameMessage.textContent =
-            "Choose a hole to begin.";
-
-    }
-
-
-    render();
+    winnerOverlay.classList.remove(
+        "show"
+    );
 
 }
 
+if (pauseOverlay) {
+
+    pauseOverlay.classList.remove(
+        "show"
+    );
+
+}
+
+startTimer();
+
+render();
+
+}
 
 /* =========================
-   START
+TIMER
+========================= */
+
+function startTimer() {
+
+stopTimer();
+
+if (
+    gameOver ||
+    gamePaused
+) {
+    return;
+}
+
+timerInterval =
+    setInterval(
+        updateTimer,
+        1000
+    );
+
+updateTimer();
+
+}
+
+function stopTimer() {
+
+if (timerInterval) {
+
+    clearInterval(
+        timerInterval
+    );
+
+    timerInterval = null;
+}
+
+}
+
+function updateTimer() {
+
+if (!gameTimer) {
+    return;
+}
+
+if (
+    gamePaused ||
+    gameOver
+) {
+    return;
+}
+
+const elapsed =
+    Math.floor(
+        (
+            Date.now() -
+            gameStartTime
+        ) / 1000
+    );
+
+gameTimer.textContent =
+    "TIME " +
+    formatTime(elapsed);
+
+}
+
+function formatTime(seconds) {
+
+const minutes =
+    Math.floor(
+        seconds / 60
+    );
+
+const remainingSeconds =
+    seconds % 60;
+
+return (
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(remainingSeconds).padStart(2, "0")
+);
+
+}
+
+/* =========================
+HIGH SCORES
+========================= */
+
+function getHighScores() {
+
+try {
+
+    const saved =
+        localStorage.getItem(
+            "midoHighScores"
+        );
+
+    if (saved) {
+
+        const parsed =
+            JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+            return parsed;
+        }
+
+    }
+
+} catch (error) {
+
+    console.log(
+        "High scores unavailable."
+    );
+
+}
+
+return [];
+
+}
+
+function getModeName() {
+
+if (
+    gameMode === "human-android"
+) {
+
+    return (
+        "PLAYER VS ANDROID - " +
+        difficulty.toUpperCase()
+    );
+}
+
+return "PLAYER VS PLAYER";
+
+}
+
+function saveHighScore(
+winner,
+time
+) {
+
+const scores =
+    getHighScores();
+
+const entry = {
+    winner: winner,
+    time: time,
+    mode: getModeName(),
+    date: new Date().toLocaleDateString()
+};
+
+scores.push(entry);
+
+scores.sort(
+    function (a, b) {
+
+        return a.time - b.time;
+
+    }
+);
+
+const isHighScore =
+    scores.indexOf(entry) !== -1 &&
+    scores.indexOf(entry) < 10;
+
+const trimmed =
+    scores.slice(0, 10);
+
+try {
+
+    localStorage.setItem(
+        "midoHighScores",
+        JSON.stringify(trimmed)
+    );
+
+} catch (error) {
+
+    console.log(
+        "High scores could not be saved."
+    );
+
+}
+
+return isHighScore;
+
+}
+
+/* =========================
+SHOW HIGH SCORES
+========================= */
+
+function showHighScores() {
+
+if (
+    !highScoresOverlay ||
+    !highScoresContent
+) {
+    return;
+}
+
+const scores =
+    getHighScores();
+
+if (scores.length === 0) {
+
+    highScoresContent.innerHTML =
+        "<p>No high scores yet.</p>";
+
+} else {
+
+    let html = "";
+
+    scores.forEach(
+        function (score, index) {
+
+            html +=
+                "<div class=\"score-row\">" +
+                "<strong>#" +
+                (index + 1) +
+                "</strong> " +
+                score.winner +
+                " - " +
+                formatTime(score.time) +
+                "<br><small>" +
+                score.mode +
+                " | " +
+                score.date +
+                "</small></div>";
+
+        }
+    );
+
+    highScoresContent.innerHTML =
+        html;
+}
+
+highScoresOverlay.classList.add(
+    "show"
+);
+
+}
+
+/* =========================
+CLOSE HIGH SCORES
+========================= */
+
+function closeHighScores() {
+
+if (highScoresOverlay) {
+
+    highScoresOverlay.classList.remove(
+        "show"
+    );
+
+}
+
+}
+
+/* =========================
+BUTTONS
+========================= */
+
+if (pauseButton) {
+
+pauseButton.addEventListener(
+    "click",
+    pauseGame
+);
+
+}
+
+if (continueButton) {
+
+continueButton.addEventListener(
+    "click",
+    continueGame
+);
+
+}
+
+if (pauseRestartButton) {
+
+pauseRestartButton.addEventListener(
+    "click",
+    restartGame
+);
+
+}
+
+if (winnerPlayAgainButton) {
+
+winnerPlayAgainButton.addEventListener(
+    "click",
+    restartGame
+);
+
+}
+
+if (winnerHighScoresButton) {
+
+winnerHighScoresButton.addEventListener(
+    "click",
+    function () {
+
+        if (winnerOverlay) {
+
+            winnerOverlay.classList.remove(
+                "show"
+            );
+
+        }
+
+        showHighScores();
+
+    }
+);
+
+}
+
+if (menuHighScoresButton) {
+
+menuHighScoresButton.addEventListener(
+    "click",
+    function () {
+
+        if (
+            typeof closeSideMenu ===
+            "function"
+        ) {
+
+            closeSideMenu();
+
+        }
+
+        showHighScores();
+
+    }
+);
+
+}
+
+if (closeHighScoresButton) {
+
+closeHighScoresButton.addEventListener(
+    "click",
+    closeHighScores
+);
+
+}
+
+/* =========================
+START GAME
 ========================= */
 
 createBoard(
-    board1,
-    1
+board1,
+1
 );
-
 
 createBoard(
-    board2,
-    2
+board2,
+2
 );
-
-
-loadSettingsAgain();
 
 applyGameSettings();
 
 render();
+
+startTimer();

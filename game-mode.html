@@ -1,70 +1,65 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<title>Mido | Game Mode</title>
 
-    <title>Mido | Game Mode</title>
+<link rel="stylesheet" href="style.css">
 
-    <link
-        rel="stylesheet"
-        href="style.css">
 </head>
 
 <body>
 
-    <div class="game-mode-page">
+<div class="game-mode-page">
 
-        <header class="top-bar">
+    <header class="top-bar">
 
-            <a
-                href="index.html"
-                class="top-button">
-                BACK
-            </a>
+        <a href="index.html" class="top-button">
+            BACK
+        </a>
 
-            <div class="top-title">
-                MIDO
-            </div>
+        <div class="top-title">
+            MIDO
+        </div>
 
-            <a
-                href="settings.html"
-                class="top-button">
-                SETTINGS
-            </a>
+        <a href="settings.html" class="top-button">
+            SETTINGS
+        </a>
 
-        </header>
+    </header>
 
 
-        <main class="mode-container">
+    <main class="mode-container">
 
-            <div class="mode-label">
-                START A NEW GAME
-            </div>
+        <div class="mode-label">
+            START A NEW GAME
+        </div>
 
-            <h1>
-                CHOOSE YOUR OPPONENT
-            </h1>
+        <h1>
+            CHOOSE YOUR OPPONENT
+        </h1>
 
-            <p class="mode-description">
-                How do you want to play Mido?
-            </p>
+        <p class="mode-description">
+            Select how you want to play.
+        </p>
 
 
-            <div class="mode-options">
+        <div class="mode-options">
 
-                <button
-                    type="button"
-                    class="mode-card"
-                    id="humanHumanButton">
+            <button
+                type="button"
+                class="mode-card"
+                id="humanHumanButton">
 
-                    <div class="mode-icon">
-                        2
-                    </div>
+                <div class="mode-icon">
+                    2
+                </div>
+
+                <div class="mode-card-content">
 
                     <div class="mode-card-title">
                         PLAYER VS PLAYER
@@ -75,135 +70,244 @@
                         on the same device.
                     </div>
 
-                    <div class="mode-card-arrow">
-                        &gt;
+                </div>
+
+                <div class="mode-card-arrow">
+                    >
+                </div>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="mode-card"
+                id="androidButton">
+
+                <div class="mode-icon">
+                    A
+                </div>
+
+                <div class="mode-card-content">
+
+                    <div class="mode-card-title">
+                        PLAYER VS ANDROID
                     </div>
+
+                    <div class="mode-card-text">
+                        Test your strategy
+                        against Android.
+                    </div>
+
+                </div>
+
+                <div class="mode-card-arrow">
+                    >
+                </div>
+
+            </button>
+
+        </div>
+
+
+        <div
+            class="difficulty-panel"
+            id="difficultyPanel">
+
+            <div class="difficulty-label">
+                CHOOSE ANDROID LEVEL
+            </div>
+
+            <div class="difficulty-options">
+
+                <button
+                    type="button"
+                    class="difficulty-card"
+                    data-difficulty="easy">
+
+                    <span class="difficulty-name">
+                        EASY
+                    </span>
+
+                    <span class="difficulty-description">
+                        A relaxed opponent
+                    </span>
 
                 </button>
 
 
                 <button
                     type="button"
-                    class="mode-card"
-                    id="humanComputerButton">
+                    class="difficulty-card"
+                    data-difficulty="medium">
 
-                    <div class="mode-icon">
-                        AI
-                    </div>
+                    <span class="difficulty-name">
+                        MEDIUM
+                    </span>
 
-                    <div class="mode-card-title">
-                        PLAYER VS COMPUTER
-                    </div>
+                    <span class="difficulty-description">
+                        A serious challenge
+                    </span>
 
-                    <div class="mode-card-text">
-                        Test your strategy
-                        against the computer.
-                    </div>
+                </button>
 
-                    <div class="mode-card-arrow">
-                        &gt;
-                    </div>
+
+                <button
+                    type="button"
+                    class="difficulty-card"
+                    data-difficulty="hard">
+
+                    <span class="difficulty-name">
+                        HARD
+                    </span>
+
+                    <span class="difficulty-description">
+                        Play at your own risk
+                    </span>
 
                 </button>
 
             </div>
 
-
-            <div class="mode-rule">
-
-                <span>
-                    MIDO
-                </span>
-
-                <span>
-                    48 STONES TO VICTORY
-                </span>
-
-            </div>
-
-        </main>
+        </div>
 
 
-        <footer class="mido-footer">
+        <div class="mode-rule">
 
-            <div class="footer-logo">
+            <span>
                 MIDO
-            </div>
+            </span>
 
-            <p>
-                An Indigenous African Strategy Game
-            </p>
+            <span>
+                48 STONES TO VICTORY
+            </span>
 
-            <div class="footer-links">
+        </div>
 
-                <a href="index.html">
-                    Home
-                </a>
-
-                <a href="game-mode.html">
-                    Play
-                </a>
-
-                <a href="settings.html">
-                    Settings
-                </a>
-
-            </div>
-
-            <p class="footer-copy">
-                Mido Game
-            </p>
-
-        </footer>
-
-    </div>
+    </main>
 
 
-    <script>
+    <footer class="mido-footer">
 
-        const humanHumanButton =
-            document.getElementById(
-                "humanHumanButton"
-            );
+        <div class="footer-logo">
+            MIDO
+        </div>
 
-        const humanComputerButton =
-            document.getElementById(
-                "humanComputerButton"
-            );
+        <p>
+            An Indigenous African Strategy Game
+        </p>
+
+        <div class="footer-links">
+
+            <a href="index.html">
+                Home
+            </a>
+
+            <a href="game-mode.html">
+                Play
+            </a>
+
+            <a href="settings.html">
+                Settings
+            </a>
+
+        </div>
+
+        <p class="footer-copy">
+            Mido Game
+        </p>
+
+    </footer>
+
+</div>
 
 
-        humanHumanButton.addEventListener(
-            "click",
-            function () {
+<script>
 
-                localStorage.setItem(
-                    "midoGameMode",
-                    "human-human"
-                );
+    const humanHumanButton =
+        document.getElementById(
+            "humanHumanButton"
+        );
 
-                window.location.href =
-                    "game.html";
+    const androidButton =
+        document.getElementById(
+            "androidButton"
+        );
 
-            }
+    const difficultyPanel =
+        document.getElementById(
+            "difficultyPanel"
         );
 
 
-        humanComputerButton.addEventListener(
-            "click",
-            function () {
+    humanHumanButton.addEventListener(
+        "click",
+        function () {
 
-                localStorage.setItem(
-                    "midoGameMode",
-                    "human-computer"
-                );
+            localStorage.setItem(
+                "midoGameMode",
+                "human-human"
+            );
 
-                window.location.href =
-                    "game.html";
+            localStorage.removeItem(
+                "midoDifficulty"
+            );
 
-            }
+            window.location.href =
+                "game.html";
+
+        }
+    );
+
+
+    androidButton.addEventListener(
+        "click",
+        function () {
+
+            difficultyPanel.classList.toggle(
+                "show"
+            );
+
+        }
+    );
+
+
+    const difficultyButtons =
+        document.querySelectorAll(
+            ".difficulty-card"
         );
 
-    </script>
+
+    difficultyButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const difficulty =
+                        button.dataset.difficulty;
+
+                    localStorage.setItem(
+                        "midoGameMode",
+                        "human-android"
+                    );
+
+                    localStorage.setItem(
+                        "midoDifficulty",
+                        difficulty
+                    );
+
+                    window.location.href =
+                        "game.html";
+
+                }
+            );
+
+        }
+    );
+
+</script>
 
 </body>
 
